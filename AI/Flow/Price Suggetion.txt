@@ -1,0 +1,47 @@
+'use server';
+
+/**
+ * @fileOverview A product price suggestion AI agent.
+ *
+ * - suggestProductPrices - A function that suggests product prices.
+ * - SuggestProductPricesInput - The input type for the suggestProductPrices function.
+ * - SuggestProductPricesOutput - The return type for the suggestProductPrices function.
+ */
+
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
+import { type SuggestProductPricesInput, type SuggestProductPricesOutput, SuggestProductPricesInputSchema, SuggestProductPricesOutputSchema } from '@/app/schemas';
+
+const prompt = ai.definePrompt({
+  name: 'suggestProductPricesPrompt',
+  input: {schema: SuggestProductPricesInputSchema},
+  output: {schema: SuggestProductPricesOutputSchema},
+  prompt: `You are an expert pricing strategist for artisan goods.
+
+You will analyze the provided product details, market trends, material costs, and competitor pricing to suggest an optimal price for the product.
+
+Consider all factors to maximize the artisan's revenue while remaining competitive in the market.
+
+Product Details: {{{productDetails}}}
+Market Trends: {{{marketTrends}}}
+Material Costs: {{{materialCosts}}}
+Competitor Pricing: {{{competitorPricing}}}
+
+Suggest a price and a justification. The justification should be a single paragraph.`,
+});
+
+const suggestProductPricesFlow = ai.defineFlow(
+  {
+    name: 'suggestProductPricesFlow',
+    inputSchema: SuggestProductPricesInputSchema,
+    outputSchema: SuggestProductPricesOutputSchema,
+  },
+  async input => {
+    const {output} = await prompt(input);
+    return output!;
+  }
+);
+
+export async function suggestProductPrices(input: SuggestProductPricesInput): Promise<SuggestProductPricesOutput> {
+  return suggestProductPricesFlow(input);
+}

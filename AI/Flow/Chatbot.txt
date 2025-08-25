@@ -1,0 +1,38 @@
+'use server';
+
+/**
+ * @fileOverview This file defines a Genkit flow for a conversational chatbot.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { type ChatbotInput, type ChatbotOutput, ChatbotInputSchema, ChatbotOutputSchema } from '@/app/schemas';
+
+const prompt = ai.definePrompt({
+  name: 'chatbotPrompt',
+  input: { schema: ChatbotInputSchema },
+  output: { schema: ChatbotOutputSchema },
+  prompt: `You are a helpful assistant for an artisan marketplace. Continue the following conversation.
+
+{{#each history}}
+{{#ifHuman}}User: {{{text}}}{{/ifHuman}}
+{{#ifModel}}AI: {{{text}}}{{/ifModel}}
+{{/each}}
+`,
+});
+
+const chatbotFlow = ai.defineFlow(
+  {
+    name: 'chatbotFlow',
+    inputSchema: ChatbotInputSchema,
+    outputSchema: ChatbotOutputSchema,
+  },
+  async (input) => {
+    const { output } = await prompt(input);
+    return output!;
+  }
+);
+
+export async function chatbot(input: ChatbotInput): Promise<ChatbotOutput> {
+  return chatbotFlow(input);
+}

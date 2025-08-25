@@ -1,0 +1,38 @@
+'use server';
+
+/**
+ * @fileOverview This file defines a Genkit flow for translating chat messages.
+ *
+ * The flow takes a chat message, a source language, and a target language as input,
+ * and returns the translated chat message.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { type TranslateChatInput, type TranslateChatOutput, TranslateChatInputSchema, TranslateChatOutputSchema } from '@/app/schemas';
+
+
+const prompt = ai.definePrompt({
+  name: 'translateChatMessagePrompt',
+  input: { schema: TranslateChatInputSchema },
+  output: { schema: TranslateChatOutputSchema },
+  prompt: `Translate the following chat message from {{{fromLanguage}}} to {{{toLanguage}}}.
+
+Chat Message: {{{text}}}`,
+});
+
+const translateChatMessageFlow = ai.defineFlow(
+  {
+    name: 'translateChatMessageFlow',
+    inputSchema: TranslateChatInputSchema,
+    outputSchema: TranslateChatOutputSchema,
+  },
+  async (input) => {
+    const { output } = await prompt(input);
+    return output!;
+  }
+);
+
+export async function translateChatMessage(input: TranslateChatInput): Promise<TranslateChatOutput> {
+  return translateChatMessageFlow(input);
+}
